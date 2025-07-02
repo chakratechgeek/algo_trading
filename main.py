@@ -34,22 +34,10 @@ def setup_django_project():
     project_dir = Path(__file__).parent
     os.chdir(project_dir)
     
-    # Step 1: Install dependencies
+    # Step 1: Install dependencies from requirements.txt
     print("\n📦 Installing Python dependencies...")
-    dependencies = [
-        "django==5.2.3",
-        "djangorestframework",
-        "django-cors-headers", 
-        "together",
-        "requests",
-        "yfinance",
-        "pandas",
-        "pytz"
-    ]
-    
-    for dep in dependencies:
-        if not run_command(f"pip install {dep}", f"Installing {dep}"):
-            print(f"⚠️  Failed to install {dep}, continuing...")
+    if not run_command("pip install -r requirements.txt", "Installing requirements"):
+        print("⚠️  Failed to install requirements, but continuing...")
     
     # Step 2: Django migrations
     commands = [

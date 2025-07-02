@@ -14,7 +14,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*.ngrok.io', '.ngrok-free.app']
 
 # Application definition
 INSTALLED_APPS = [
@@ -119,14 +119,64 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Angel One API settings
-ANGEL_CLIENT_ID = os.environ.get('ANGEL_CLIENT_ID', '')
+ANGEL_CLIENT_ID = os.environ.get('ANGEL_CLIENT_ID', 'xhMChjlS')
+ANGEL_CLIENT_SECRET = os.environ.get('ANGEL_CLIENT_SECRET', '78e4798a-f35b-481f-9804-ff78557f99ed')
 ANGEL_PASSWORD = os.environ.get('ANGEL_PASSWORD', '')
 ANGEL_TOTP_SECRET = os.environ.get('ANGEL_TOTP_SECRET', '')
+
+# Angel One OAuth Configuration
+ANGEL_ONE_CONFIG = {
+    'CLIENT_ID': ANGEL_CLIENT_ID,
+    'CLIENT_SECRET': ANGEL_CLIENT_SECRET,
+    'PASSWORD': ANGEL_PASSWORD,
+    'TOTP_SECRET': ANGEL_TOTP_SECRET,
+    'REDIRECT_URI': 'http://localhost:8000/api/angel/auth/callback/',
+    'BASE_URL': 'https://apiconnect.angelbroking.com',
+    'AUTH_URL': 'https://smartapi.angelbroking.com/publisher-login',
+}
+
+# Ngrok Configuration 
+NGROK_AUTH_TOKEN = os.environ.get('NGROK_AUTH_TOKEN', '')
+NGROK_ENABLED = os.environ.get('NGROK_ENABLED', 'False').lower() == 'true'
+
+# Ngrok Auto-Start Configuration
+NGROK_AUTO_START = os.environ.get('NGROK_AUTO_START', 'True').lower() == 'true'
+NGROK_AUTH_TOKEN = os.environ.get('NGROK_AUTH_TOKEN', '2zIambSj5KfyMpM6mcBWmkvDWtq_69e8qH2wuA4jGu7A5o6RL')
+
+# Auto-start ngrok for development
+if DEBUG and NGROK_AUTO_START:
+    try:
+        import ngrok_auto  # This will auto-start ngrok
+    except ImportError:
+        pass
+
+# Together AI API settings
+TOGETHER_API_KEY = os.environ.get('TOGETHER_API_KEY', '9c31ba668fcab4996d94aec803f87bab9d7056ade551995dc9e986a6a77e7bee')
+
+# LLM Configuration for trading analysis
+LLM_CONFIG = {
+    'API_KEY': TOGETHER_API_KEY,
+    'MODEL': 'deepseek-ai/DeepSeek-V3',
+    'MAX_TOKENS': 500,
+    'TEMPERATURE': 0.3
+}
 
 # Trading settings
 DEFAULT_RISK_PERCENTAGE = 2.0  # 2% risk per trade
 MAX_POSITIONS_PER_STRATEGY = 10
 TRADING_ENABLED = True
+
+# Small Cap Trading Strategy Settings
+SMALL_CAP_CONFIG = {
+    'MIN_PRICE': 50,
+    'MAX_PRICE': 100,
+    'MAX_MARKET_CAP': 5000_000_000_000,  # 5000 crores
+    'MIN_VOLUME': 50000,
+    'PRICE_CHANGE_THRESHOLD': 2.0,  # ±2 rupees
+    'MAX_INVESTMENT_PER_STOCK': 5000,
+    'MIN_AI_CONFIDENCE': 60,
+    'TRADING_INTERVAL_MINUTES': 30,
+}
 
 # Logging
 LOGGING = {
