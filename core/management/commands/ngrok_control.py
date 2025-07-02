@@ -18,50 +18,50 @@ class Command(BaseCommand):
         action = options['action']
         
         if action == 'start':
-            self.stdout.write("🚀 Starting ngrok tunnel...")
+            self.stdout.write("[START] Starting ngrok tunnel...")
             success = ngrok_manager.start_tunnel()
             
             if success:
                 self.stdout.write(
-                    self.style.SUCCESS("✅ Ngrok tunnel started successfully!")
+                    self.style.SUCCESS("[SUCCESS] Ngrok tunnel started successfully!")
                 )
-                self.stdout.write(f"🌍 Public URL: {ngrok_manager.public_url}")
-                self.stdout.write(f"🔗 Callback URL: {ngrok_manager.callback_url}")
+                self.stdout.write(f"[PUBLIC] URL: {ngrok_manager.public_url}")
+                self.stdout.write(f"[CALLBACK] URL: {ngrok_manager.callback_url}")
             else:
                 self.stdout.write(
-                    self.style.ERROR("❌ Failed to start ngrok tunnel")
+                    self.style.ERROR("[ERROR] Failed to start ngrok tunnel")
                 )
         
         elif action == 'stop':
-            self.stdout.write("🛑 Stopping ngrok tunnel...")
+            self.stdout.write("[STOP] Stopping ngrok tunnel...")
             ngrok_manager.stop_tunnel()
             self.stdout.write(
-                self.style.SUCCESS("✅ Ngrok tunnel stopped")
+                self.style.SUCCESS("[SUCCESS] Ngrok tunnel stopped")
             )
         
         elif action == 'restart':
-            self.stdout.write("🔄 Restarting ngrok tunnel...")
+            self.stdout.write("[RESTART] Restarting ngrok tunnel...")
             ngrok_manager.restart_tunnel()
             
             if ngrok_manager.is_running:
                 self.stdout.write(
-                    self.style.SUCCESS("✅ Ngrok tunnel restarted successfully!")
+                    self.style.SUCCESS("[SUCCESS] Ngrok tunnel restarted successfully!")
                 )
-                self.stdout.write(f"🌍 Public URL: {ngrok_manager.public_url}")
-                self.stdout.write(f"🔗 Callback URL: {ngrok_manager.callback_url}")
+                self.stdout.write(f"[PUBLIC] URL: {ngrok_manager.public_url}")
+                self.stdout.write(f"[CALLBACK] URL: {ngrok_manager.callback_url}")
             else:
                 self.stdout.write(
-                    self.style.ERROR("❌ Failed to restart ngrok tunnel")
+                    self.style.ERROR("[ERROR] Failed to restart ngrok tunnel")
                 )
         
         elif action == 'status':
             if ngrok_manager.is_running:
                 self.stdout.write(
-                    self.style.SUCCESS("✅ Ngrok tunnel is RUNNING")
+                    self.style.SUCCESS("[STATUS] Ngrok tunnel is RUNNING")
                 )
-                self.stdout.write(f"🌍 Public URL: {ngrok_manager.public_url}")
-                self.stdout.write(f"🔗 Callback URL: {ngrok_manager.callback_url}")
+                self.stdout.write(f"[PUBLIC] URL: {ngrok_manager.public_url}")
+                self.stdout.write(f"[CALLBACK] URL: {ngrok_manager.callback_url}")
             else:
                 self.stdout.write(
-                    self.style.WARNING("⚠️ Ngrok tunnel is NOT running")
+                    self.style.WARNING("[STATUS] Ngrok tunnel is NOT running")
                 )

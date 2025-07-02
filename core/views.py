@@ -82,6 +82,12 @@ def home_view(request):
                     <p>Deploy automated trading strategies, configure risk management, backtest algorithms, and monitor bot performance.</p>
                     <a href="/api/trading/" class="btn">Trading Strategies</a>
                 </div>
+                
+                <div class="card">
+                    <h3><span class="emoji">🎯</span>Detailed Trading Monitor</h3>
+                    <p>Step-by-step analysis of every trading decision, model suggestions, AI reasoning, and execution details with real-time monitoring.</p>
+                    <a href="/api/trading/monitor/" class="btn">View Detailed Monitor</a>
+                </div>
             </div>
             
             <div class="api-section">

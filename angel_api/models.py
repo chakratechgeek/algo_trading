@@ -154,3 +154,47 @@ class Order(TimeStampedModel):
     
     def __str__(self):
         return f"{self.transaction_type} {self.quantity} {self.symbol.symbol} @ ₹{self.price or 'Market'} - {self.status}"
+
+
+class FilteredSymbolList(TimeStampedModel):
+    """Model to store filtered symbol lists by price range."""
+    list_name = models.CharField(max_length=100, help_text="Name/description of the filtered list")
+    price_range_min = models.DecimalField(max_digits=12, decimal_places=2, help_text="Minimum price filter")
+    price_range_max = models.DecimalField(max_digits=12, decimal_places=2, help_text="Maximum price filter")
+    total_count = models.IntegerField(help_text="Total number of symbols in this filtered list")
+    
+    # Optional additional filters
+    market_cap_filter = models.CharField(max_length=50, blank=True, help_text="Market cap filter used")
+    volume_filter = models.CharField(max_length=50, blank=True, help_text="Volume filter used")
+    additional_criteria = models.TextField(blank=True, help_text="Any additional filtering criteria")
+    
+    # Metadata
+    filter_date = models.DateTimeField(auto_now_add=True, help_text="When this filter was applied")
+    is_active = models.BooleanField(default=True, help_text="Whether this list is currently active")
+    
+    class Meta:
+        ordering = ['-filter_date']
+        unique_together = ['list_name', 'price_range_min', 'price_range_max', 'filter_date']
+    
+    def __str__(self):
+        return f"{self.list_name} (₹{self.price_range_min}-₹{self.price_range_max}) - {self.total_count} symbols"
+
+
+class FilteredSymbolItem(TimeStampedModel):
+    """Model to store individual symbols in a filtered list."""
+    filtered_list = models.ForeignKey(FilteredSymbolList, on_delete=models.CASCADE, related_name='symbols')
+    symbol = models.ForeignKey(NSESymbol, on_delete=models.CASCADE)
+    
+    # Price at the time of filtering
+    price_at_filter = models.DecimalField(max_digits=12, decimal_places=2, help_text="Price when symbol was added to this list")
+    
+    # Additional data at time of filtering
+    volume_at_filter = models.BigIntegerField(null=True, blank=True)
+    market_cap_at_filter = models.BigIntegerField(null=True, blank=True, help_text="Market cap in millions")
+    
+    class Meta:
+        unique_together = ['filtered_list', 'symbol']
+        ordering = ['symbol__symbol']
+    
+    def __str__(self):
+        return f"{self.symbol.symbol} in {self.filtered_list.list_name} @ ₹{self.price_at_filter}"

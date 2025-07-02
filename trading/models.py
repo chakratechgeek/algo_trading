@@ -283,3 +283,5 @@ class NewsAnalysis(TimeStampedModel):
     
     def __str__(self):
         return f"{self.symbol.symbol} - {self.sentiment} - {self.headline[:50]}..."
+
+

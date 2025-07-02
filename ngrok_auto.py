@@ -1,6 +1,6 @@
 """
-Auto-Ngrok Manager for Django
-=============================
+Auto-Ngrok Manager for Django Trading Platform
+===========================================
 
 This module automatically starts and manages ngrok tunnels when Django starts.
 It ensures Angel One API calls always work by maintaining a public HTTPS URL.
@@ -26,11 +26,11 @@ class NgrokManager:
         self.callback_url = None
         self.is_running = False
         
-    def start_tunnel(self):
+    def start_tunnel(self, port=8000):
         """Start ngrok tunnel automatically."""
         try:
             # Ensure clean startup - stop any existing instances first
-            logger.info("🧹 Performing clean startup...")
+            logger.info("[CLEANUP] Performing clean startup...")
             self.stop_tunnel()
             
             # Additional cleanup
@@ -39,11 +39,11 @@ class NgrokManager:
             # Reset all state
             self._reset_state()
             
-            logger.info("🚀 Starting fresh ngrok tunnel...")
+            logger.info("[START] Starting fresh ngrok tunnel on port %s...", port)
             
             # Start ngrok process
             self.process = subprocess.Popen(
-                ['ngrok', 'http', '8000', '--log', 'stdout'],
+                ['ngrok', 'http', str(port), '--log', 'stdout'],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -63,19 +63,19 @@ class NgrokManager:
                 # Update Django settings
                 self._update_settings()
                 
-                logger.info(f"✅ Ngrok tunnel active: {self.public_url}")
-                logger.info(f"🔗 Callback URL: {self.callback_url}")
+                logger.info("[SUCCESS] Ngrok tunnel active: %s", self.public_url)
+                logger.info("[SUCCESS] Callback URL: %s", self.callback_url)
                 
-                # Start health check thread
-                self._start_health_check()
+                # Health check disabled to prevent restart loops
+                # self._start_health_check()
                 
                 return True
             else:
-                logger.error("❌ Failed to get ngrok public URL")
+                logger.error("[ERROR] Failed to get ngrok public URL")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Error starting ngrok: {e}")
+            logger.error("[ERROR] Error starting ngrok: %s", e)
             return False
     
     def _cleanup_existing_processes(self):
@@ -91,9 +91,9 @@ class NgrokManager:
                 subprocess.run(['pkill', '-f', 'ngrok'], 
                              capture_output=True, check=False)
                 time.sleep(1)
-            logger.info("🧹 Cleaned up old ngrok processes")
+            logger.info("[CLEANUP] Cleaned up old ngrok processes")
         except Exception as e:
-            logger.warning(f"⚠️ Error during process cleanup: {e}")
+            logger.warning("[WARNING] Error during process cleanup: %s", e)
     
     def _deep_cleanup(self):
         """Perform deep cleanup of ngrok resources."""
@@ -109,7 +109,7 @@ class NgrokManager:
                             if tunnel_name:
                                 # Try to delete the tunnel
                                 requests.delete(f'http://localhost:4040/api/tunnels/{tunnel_name}', timeout=2)
-                        logger.info("🧹 Cleared existing tunnel configurations")
+                        logger.info("[CLEANUP] Cleared existing tunnel configurations")
                         break
                 except:
                     time.sleep(0.5)
@@ -122,7 +122,7 @@ class NgrokManager:
             time.sleep(2)
             
         except Exception as e:
-            logger.warning(f"⚠️ Deep cleanup warning: {e}")
+            logger.warning("[WARNING] Deep cleanup warning: %s", e)
     
     def _reset_state(self):
         """Reset all internal state variables."""
@@ -130,7 +130,7 @@ class NgrokManager:
         self.public_url = None
         self.callback_url = None
         self.is_running = False
-        logger.info("🔄 State reset completed")
+        logger.info("[RESET] State reset completed")
     
     def _get_public_url(self):
         """Get the public URL from ngrok API."""
@@ -154,9 +154,9 @@ class NgrokManager:
         try:
             if hasattr(settings, 'ANGEL_ONE_CONFIG'):
                 settings.ANGEL_ONE_CONFIG['REDIRECT_URI'] = self.callback_url
-                logger.info(f"📝 Updated Django settings with callback URL")
+                logger.info("[SUCCESS] Updated Django settings with callback URL")
         except Exception as e:
-            logger.error(f"❌ Error updating settings: {e}")
+            logger.error("[ERROR] Error updating settings: %s", e)
     
     def _start_health_check(self):
         """Start a background thread to monitor tunnel health."""
@@ -166,10 +166,10 @@ class NgrokManager:
                     # Check if tunnel is still active
                     response = requests.get('http://localhost:4040/api/tunnels', timeout=5)
                     if response.status_code != 200:
-                        logger.warning("⚠️ Ngrok tunnel may be down, attempting restart...")
+                        logger.warning("[WARNING] Ngrok tunnel may be down, attempting restart...")
                         self.restart_tunnel()
                 except:
-                    logger.warning("⚠️ Ngrok health check failed, attempting restart...")
+                    logger.warning("[WARNING] Ngrok health check failed, attempting restart...")
                     self.restart_tunnel()
                 
                 time.sleep(30)  # Check every 30 seconds
@@ -177,16 +177,16 @@ class NgrokManager:
         thread = threading.Thread(target=health_check, daemon=True)
         thread.start()
     
-    def restart_tunnel(self):
+    def restart_tunnel(self, port=8000):
         """Restart the ngrok tunnel."""
-        logger.info("🔄 Restarting ngrok tunnel...")
+        logger.info("[RESTART] Restarting ngrok tunnel...")
         self.stop_tunnel()
         time.sleep(2)
-        self.start_tunnel()
+        self.start_tunnel(port)
     
     def stop_tunnel(self):
         """Stop the ngrok tunnel."""
-        logger.info("🛑 Stopping ngrok tunnel...")
+        logger.info("[STOP] Stopping ngrok tunnel...")
         self.is_running = False
         
         if self.process:
@@ -197,16 +197,16 @@ class NgrokManager:
                 # Wait for graceful termination
                 try:
                     self.process.wait(timeout=10)
-                    logger.info("✅ Ngrok process terminated gracefully")
+                    logger.info("[SUCCESS] Ngrok process terminated gracefully")
                 except subprocess.TimeoutExpired:
                     # Force kill if it doesn't terminate gracefully
-                    logger.warning("⚠️ Ngrok didn't terminate gracefully, force killing...")
+                    logger.warning("[WARNING] Ngrok didn't terminate gracefully, force killing...")
                     self.process.kill()
                     self.process.wait()
-                    logger.info("✅ Ngrok process force killed")
+                    logger.info("[SUCCESS] Ngrok process force killed")
                     
             except Exception as e:
-                logger.error(f"❌ Error stopping ngrok process: {e}")
+                logger.error("[ERROR] Error stopping ngrok process: %s", e)
                 # Try force kill as last resort
                 try:
                     self.process.kill()
@@ -222,7 +222,7 @@ class NgrokManager:
         self.public_url = None
         self.callback_url = None
         
-        logger.info("🛑 Ngrok tunnel stopped completely")
+        logger.info("[STOP] Ngrok tunnel stopped completely")
     
     def get_callback_url(self):
         """Get the current callback URL."""
@@ -232,7 +232,7 @@ class NgrokManager:
 ngrok_manager = NgrokManager()
 _ngrok_started = False  # Flag to prevent duplicate starts
 
-def start_ngrok_auto():
+def start_ngrok_auto(port=8000):
     """Start ngrok automatically when Django starts."""
     global _ngrok_started
     
@@ -245,7 +245,7 @@ def start_ngrok_auto():
     
     try:
         print("=" * 60)
-        print("🧹 CLEANING UP PREVIOUS NGROK SESSIONS...")
+        print("[CLEANUP] CLEANING UP PREVIOUS NGROK SESSIONS...")
         print("=" * 60)
         
         # Pre-startup cleanup - ensure no lingering processes
@@ -255,32 +255,32 @@ def start_ngrok_auto():
         result = subprocess.run(['ngrok', 'version'], 
                               capture_output=True, text=True, timeout=5)
         if result.returncode != 0:
-            logger.warning("⚠️ Ngrok not found, skipping auto-start")
+            logger.warning("[WARNING] Ngrok not found, skipping auto-start")
             return
         
-        print("🚀 STARTING FRESH NGROK TUNNEL...")
+        print("[START] STARTING FRESH NGROK TUNNEL...")
         
         # Start tunnel
-        success = ngrok_manager.start_tunnel()
+        success = ngrok_manager.start_tunnel(port)
         _ngrok_started = True  # Mark as started
         
         if success:
             print("=" * 60)
-            print("🎉 NGROK TUNNEL ACTIVE")
-            print(f"📍 Local:     http://localhost:8000")
-            print(f"🌍 Public:    {ngrok_manager.public_url}")
-            print(f"🔗 Callback:  {ngrok_manager.callback_url}")
+            print("[SUCCESS] NGROK TUNNEL ACTIVE")
+            print(f"[LOCAL]     http://localhost:{port}")
+            print(f"[PUBLIC]    {ngrok_manager.public_url}")
+            print(f"[CALLBACK]  {ngrok_manager.callback_url}")
             print("=" * 60)
-            print("✅ Angel One API calls will now work!")
-            print("📋 Use this callback URL in Angel One portal:")
+            print("[SUCCESS] Angel One API calls will now work!")
+            print("[INFO] Use this callback URL in Angel One portal:")
             print(f"   {ngrok_manager.callback_url}")
             print("=" * 60)
         else:
-            print("❌ Failed to start ngrok tunnel")
-            print("💡 You can start it manually: ngrok http 8000")
+            print("[ERROR] Failed to start ngrok tunnel")
+            print("[INFO] You can start it manually: ngrok http " + str(port))
     
     except Exception as e:
-        logger.error(f"❌ Error in auto-start: {e}")
+        logger.error("[ERROR] Error in auto-start: %s", e)
 
 def _perform_pre_startup_cleanup():
     """Perform comprehensive cleanup before starting."""
@@ -301,16 +301,16 @@ def _perform_pre_startup_cleanup():
             try:
                 requests.get(f'http://localhost:{port}/api/tunnels', timeout=1)
                 # If we can connect, there's still an ngrok instance running
-                logger.warning(f"⚠️ Found ngrok instance on port {port}, terminating...")
+                logger.warning("[WARNING] Found ngrok instance on port %s, terminating...", port)
                 if sys.platform == 'win32':
                     subprocess.run(f'netstat -ano | findstr :{port}', shell=True, capture_output=True)
             except:
                 pass  # Port not in use, which is good
         
-        print("✅ Pre-startup cleanup completed")
+        print("[SUCCESS] Pre-startup cleanup completed")
         
     except Exception as e:
-        logger.warning(f"⚠️ Pre-startup cleanup warning: {e}")
+        logger.warning("[WARNING] Pre-startup cleanup warning: %s", e)
 
 def stop_ngrok_auto():
     """Stop ngrok when Django shuts down."""
@@ -318,13 +318,13 @@ def stop_ngrok_auto():
     
     if _ngrok_started:
         print("\n" + "=" * 60)
-        print("🛑 SHUTTING DOWN NGROK TUNNEL...")
+        print("[SHUTDOWN] SHUTTING DOWN NGROK TUNNEL...")
         print("=" * 60)
         
         ngrok_manager.stop_tunnel()
         _ngrok_started = False
         
-        print("✅ Ngrok tunnel stopped gracefully")
+        print("[SUCCESS] Ngrok tunnel stopped gracefully")
         print("=" * 60)
 
 def setup_signal_handlers():
@@ -332,7 +332,7 @@ def setup_signal_handlers():
     import signal
     
     def signal_handler(signum, frame):
-        print(f"\n🔔 Received signal {signum}, shutting down...")
+        print(f"\n[SIGNAL] Received signal {signum}, shutting down...")
         stop_ngrok_auto()
         sys.exit(0)
     
