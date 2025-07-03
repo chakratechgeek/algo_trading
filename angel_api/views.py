@@ -56,15 +56,11 @@ class AuthenticationView(APIView):
     permission_classes = []  # Allow unauthenticated access for login
     
     def post(self, request):
-        serializer = AuthenticationSerializer(data=request.data)
-        if serializer.is_valid():
+        try:
             angel_api = AngelOneAPI()
             
-            success, result = angel_api.authenticate(
-                client_id=serializer.validated_data['client_id'],
-                password=serializer.validated_data['password'],
-                totp=serializer.validated_data['totp']
-            )
+            # Use the simplified authentication method
+            success, result = angel_api.authenticate()
             
             if success:
                 return Response({
@@ -77,8 +73,12 @@ class AuthenticationView(APIView):
                     'success': False,
                     'message': result
                 }, status=status.HTTP_400_BAD_REQUEST)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': f'Authentication error: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LTPView(APIView):
@@ -473,3 +473,85 @@ class NgrokSetupView(APIView):
                 </body>
                 </html>
             """, status=500)
+
+
+class FilterStocksView(APIView):
+    """View to filter NSE stocks by price range using real Angel One API."""
+    permission_classes = []  # Allow access for testing
+    
+    def get(self, request):
+        try:
+            # Get parameters
+            min_price = float(request.GET.get('min_price', 75))
+            max_price = float(request.GET.get('max_price', 150))
+            limit = request.GET.get('limit')
+            if limit:
+                limit = int(limit)
+            
+            angel_api = AngelOneAPI()
+            
+            # Authenticate first
+            success, message = angel_api.authenticate()
+            if not success:
+                return Response({
+                    'success': False,
+                    'message': f'Authentication failed: {message}'
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Filter stocks
+            filtered_stocks = angel_api.filter_stocks_by_price_range(
+                min_price=min_price,
+                max_price=max_price,
+                limit=limit
+            )
+            
+            return Response({
+                'success': True,
+                'min_price': min_price,
+                'max_price': max_price,
+                'count': len(filtered_stocks),
+                'stocks': filtered_stocks,
+                'timestamp': timezone.now()
+            })
+            
+        except ValueError as e:
+            return Response({
+                'success': False,
+                'message': f'Invalid parameters: {str(e)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': f'Error filtering stocks: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class LoadSymbolsView(APIView):
+    """View to load NSE symbols from master file."""
+    permission_classes = []  # Allow access for testing
+    
+    def post(self, request):
+        try:
+            angel_api = AngelOneAPI()
+            nse_stocks, output_file = angel_api.load_nse_symbols_from_master()
+            
+            if nse_stocks:
+                return Response({
+                    'success': True,
+                    'message': f'Loaded {len(nse_stocks)} NSE stocks',
+                    'output_file': output_file,
+                    'count': len(nse_stocks),
+                    'timestamp': timezone.now()
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'message': 'Failed to load symbols from master file'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': f'Error loading symbols: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

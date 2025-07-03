@@ -10,7 +10,11 @@ import warnings
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here-change-in-production')
+try:
+    from config.secrets import DJANGO_SECRET_KEY
+    SECRET_KEY = DJANGO_SECRET_KEY
+except ImportError:
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-here-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
@@ -120,10 +124,19 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Angel One API settings
-ANGEL_CLIENT_ID = os.environ.get('ANGEL_CLIENT_ID', 'xhMChjlS')
-ANGEL_CLIENT_SECRET = os.environ.get('ANGEL_CLIENT_SECRET', '78e4798a-f35b-481f-9804-ff78557f99ed')
+try:
+    from config.secrets import API_KEY, CLIENT_CODE, TOTP_SECRET, SECRET_KEY as ANGEL_SECRET_KEY
+    ANGEL_CLIENT_ID = CLIENT_CODE
+    ANGEL_CLIENT_SECRET = ANGEL_SECRET_KEY
+    ANGEL_TOTP_SECRET = TOTP_SECRET
+    ANGEL_API_KEY = API_KEY
+except ImportError:
+    ANGEL_CLIENT_ID = os.environ.get('ANGEL_CLIENT_ID', 'xhMChjlS')
+    ANGEL_CLIENT_SECRET = os.environ.get('ANGEL_CLIENT_SECRET', '78e4798a-f35b-481f-9804-ff78557f99ed')
+    ANGEL_TOTP_SECRET = os.environ.get('ANGEL_TOTP_SECRET', '')
+    ANGEL_API_KEY = os.environ.get('ANGEL_API_KEY', '')
+
 ANGEL_PASSWORD = os.environ.get('ANGEL_PASSWORD', '')
-ANGEL_TOTP_SECRET = os.environ.get('ANGEL_TOTP_SECRET', '')
 
 # Angel One OAuth Configuration
 ANGEL_ONE_CONFIG = {
@@ -137,12 +150,16 @@ ANGEL_ONE_CONFIG = {
 }
 
 # Ngrok Configuration 
-NGROK_AUTH_TOKEN = os.environ.get('NGROK_AUTH_TOKEN', '')
+try:
+    from config.secrets import NGROK_AUTH_TOKEN as CONFIG_NGROK_TOKEN
+    NGROK_AUTH_TOKEN = CONFIG_NGROK_TOKEN
+except ImportError:
+    NGROK_AUTH_TOKEN = os.environ.get('NGROK_AUTH_TOKEN', '')
+
 NGROK_ENABLED = os.environ.get('NGROK_ENABLED', 'False').lower() == 'true'
 
 # Ngrok Auto-Start Configuration
 NGROK_AUTO_START = os.environ.get('NGROK_AUTO_START', 'True').lower() == 'true'
-NGROK_AUTH_TOKEN = os.environ.get('NGROK_AUTH_TOKEN', '2zIambSj5KfyMpM6mcBWmkvDWtq_69e8qH2wuA4jGu7A5o6RL')
 
 # Auto-start ngrok for development
 if DEBUG and NGROK_AUTO_START:
@@ -152,7 +169,11 @@ if DEBUG and NGROK_AUTO_START:
         pass
 
 # Together AI API settings
-TOGETHER_API_KEY = os.environ.get('TOGETHER_API_KEY', '9c31ba668fcab4996d94aec803f87bab9d7056ade551995dc9e986a6a77e7bee')
+try:
+    from config.secrets import TOGETHER_API_KEY as CONFIG_TOGETHER_KEY
+    TOGETHER_API_KEY = CONFIG_TOGETHER_KEY
+except ImportError:
+    TOGETHER_API_KEY = os.environ.get('TOGETHER_API_KEY', '9c31ba668fcab4996d94aec803f87bab9d7056ade551995dc9e986a6a77e7bee')
 
 # LLM Configuration for trading analysis
 LLM_CONFIG = {

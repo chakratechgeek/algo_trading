@@ -62,11 +62,17 @@ Run the setup command to install dependencies and initialize the database:
 python main.py setup
 ```
 
-### 2. Configure Angel One API
-Add your Angel One credentials in the Django admin:
-1. Go to http://127.0.0.1:8000/admin/
-2. Login with admin/admin123
-3. Add your Angel One credentials in the Angel API section
+### 2. Configure API Credentials
+Set up your secure API credentials:
+```bash
+# Setup credentials (creates config/secrets.py from template)
+python setup_credentials.py
+
+# Verify credentials are properly configured
+python setup_credentials.py check
+```
+
+Edit `config/secrets.py` with your actual Angel One API credentials.
 
 ### 3. Start Trading Bot
 ```bash
@@ -141,6 +147,18 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
+## Documentation
+
+### 📚 **Complete Documentation**
+- **[📋 Functionality Reference](docs/FUNCTIONALITY_REFERENCE.md)** - Complete feature and technical reference
+- **[📁 Documentation Index](docs/README.md)** - All documentation organized by category
+- **[🔐 Security Guide](docs/SECURITY_MIGRATION.md)** - Security setup and best practices
+- **[⚙️ Configuration Guide](config/README.md)** - API credential setup
+
+### 📖 **Quick References**
+- **[🚀 Project Overview](PROJECT_FINAL.md)** - High-level platform overview
+- **[🧹 Cleanup Status](docs/CLEANUP_COMPLETE.md)** - Current project structure
+
 ## Deployment
 
 ### Production Setup
@@ -173,8 +191,10 @@ This software is for educational purposes only. Trading in financial markets inv
 ## Support
 
 For support and questions:
-- Create an issue on GitHub
-- Check the documentation in the `docs/` folder (coming soon)
+- **📋 Check [Functionality Reference](docs/FUNCTIONALITY_REFERENCE.md)** for complete feature documentation
+- **📚 Browse [Documentation](docs/README.md)** for guides and references
+- **🔧 Run troubleshooting**: `python setup_credentials.py check`
+- Create an issue on GitHub for bugs or feature requests
 
 ## Roadmap
 

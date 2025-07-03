@@ -21,6 +21,9 @@ ta==0.11.0
 # Authentication and Security
 pyotp==2.6.0
 
+# AngelOne SmartAPI
+smartapi-python==1.3.0
+
 # AI/ML Integration
 together==1.5.17
 

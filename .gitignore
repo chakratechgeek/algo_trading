@@ -3,6 +3,29 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Credentials and sensitive data
+credentials.py
+*.env
+.env*
+config/secrets.py
+config/secrets/
+config/*.key
+config/*.secret
+config/local_*
+
+# Results and output files
+results/
+*.json
+filtered_stocks_*.json
+real_nse_*.json
+nse_stocks_*.json
+nse_symbols_*.json
+
+# Logs
+logs/
+*.log
+trading.log
+
 # C extensions
 *.so
 
